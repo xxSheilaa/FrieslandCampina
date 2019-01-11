@@ -62,17 +62,17 @@ sku.origin <-
 
 ## Load and clean Code usage for 2018YTD ##
 
-code.2018 <- read.csv2("CodeUsage_2018YTD.csv") 
-code.2018$id <- code.2018$ï..id
-code.2018$accountid <- code.2018$person_id
+code.2018 <- read.csv2("CodeUsage_2018YTD.csv") # load in CodeUsage data
+code.2018$id <- code.2018$ï..id # remove the bad variable name by copying data into corrected variable name
+code.2018$accountid <- code.2018$person_id # rename the person_id to account_id
 code.2018$status_code <- NULL # status_code is only 0, no value there, so it was removed
-code.2018$person_id <- NULL
-code.2018$ï..id <- NULL
-code.2018$ip_addr <- NULL
-code.2018$seq_nr <- NULL
-code.2018$is_reserved <- NULL
-code.2018$batch_id <- NULL
-code.2018$units_id <- NULL
-code.2018$portal_id <- NULL
+code.2018$person_id <- NULL # remove the person_id variable since it now is account_id
+code.2018$ï..id <- NULL # remove bad variable
+code.2018$ip_addr <- NULL # remove bad variable
+code.2018$seq_nr <- NULL # remove bad variable
+code.2018$is_reserved <- NULL # remove bad variable
+code.2018$batch_id <- NULL # remove bad variable
+code.2018$units_id <- NULL # remove bad variable
+code.2018$portal_id <- NULL # remove bad variable
 
 
