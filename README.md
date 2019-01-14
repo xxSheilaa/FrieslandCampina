@@ -6,6 +6,12 @@ library(anytime)
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
 #setwd("C:/Users/sheil/Documents/data blok 3/SPM_Eurosparen_Part1")
+
+
+#******************************************************************#
+#************************ Account Creation ************************#
+#******************************************************************#
+
 ## Load and clean the account creation table ##
 
 acct.create <- read.csv2("AccountCreation.csv", header = TRUE)
@@ -24,6 +30,11 @@ acct.create.sample$id <-
 
 acct.create.sample$ï..id <- NULL # remove the bad variable name
 
+
+#*****************************************************************#
+#************************ Account DemoGeo ************************#
+#*****************************************************************#
+
 ## Load and clean the account demogeo table ##
 
 acct.demogeo <-
@@ -41,6 +52,12 @@ acct.create.sample <-
 post.gender <-
   table(PostalCode = acct.demogeo$postalCode, Sex = acct.demogeo$gender) # information of gender counts by postal code
 head(post.gender)
+
+
+#***********************************************************#
+#************************ Cashbacks ************************#
+#***********************************************************#
+
 ## Load and clean the account balance table ##
 
 acct.cashback <- read.csv2("Cashbacks.csv", header = TRUE)
@@ -60,13 +77,19 @@ acctid.origin <-
 sku.origin <-
   table(acct.cashback$sku, acct.cashback$origin) # summarizes product registered under cashback as app or website count
 
+#************************************************************#
+#************************ CODE USAGE ************************#
+#************************************************************#
+
 ## Load and clean Code usage for 2018YTD ##
 
 code.2018 <- read.csv2("CodeUsage_2018YTD.csv") # load in CodeUsage data
+
 code.2018$id <- code.2018$ï..id # remove the bad variable name by copying data into corrected variable name
 code.2018$accountid <- code.2018$person_id # rename the person_id to account_id
 code.2018$status_code <- NULL # status_code is only 0, no value there, so it was removed
 code.2018$person_id <- NULL # remove the person_id variable since it now is account_id
+
 code.2018$ï..id <- NULL # remove bad variable
 code.2018$ip_addr <- NULL # remove bad variable
 code.2018$seq_nr <- NULL # remove bad variable
@@ -74,7 +97,13 @@ code.2018$is_reserved <- NULL # remove bad variable
 code.2018$batch_id <- NULL # remove bad variable
 code.2018$units_id <- NULL # remove bad variable
 code.2018$portal_id <- NULL # remove bad variable
+code.2018$RUN_ID <- NULL # remove bad variable
+code.2018$IsActual <- NULL # remove bad variable
 
-## OLA made changes here
+code.2018$crton <- anytime(code.2018$crton) # convert to date time
 
-yay!
+
+#************************************************************#
+#************************ Part 2 ****************************#
+#************************************************************#
+
