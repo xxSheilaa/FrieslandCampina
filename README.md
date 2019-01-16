@@ -3,6 +3,7 @@
 #rm(list = ls())
 
 library(anytime)
+library(recommenderlab)
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
 #setwd("C:/Users/sheil/Documents/data blok 3/SPM_Eurosparen_Part1")
@@ -30,6 +31,26 @@ acct.create.sample$id <-
 
 acct.create.sample$ï..id <- NULL # remove the bad variable name
 
+#*****************************************************************#
+#************************ Account Balance ************************#
+#*****************************************************************#
+
+acct.bal <- read.csv2("AccountBalance.csv")
+
+acct.bal$id <- acct.bal$ï..id # change name
+acct.bal$ï..id <- NULL # remove old names
+
+acct.bal$modified <- anytime(acct.bal$modified) # change from factor to datetime variable
+acct.bal$created <- anytime(acct.bal$created) # change from factor to datetime variable
+
+acct.bal.sample <- acct.bal[acct.bal$accountId %in% acct.create.sample$id,] # trim to the sampled data
+
+acct.not <- acct.create.sample[!(acct.create.sample$id %in% acct.bal.sample$accountId),] # check the accounts that did not show up in the balance sample
+
+# confirming that the ids which are not in account balance are not in code usage table. 
+# This means that if an account does not input a code then that account will not show up in the account balance table.
+
+code.2018[ code.2018$accountId  %in% acct.not$id,] # should be empty
 
 #*****************************************************************#
 #************************ Account DemoGeo ************************#
@@ -114,8 +135,7 @@ code.2018$crton <- anytime(code.2018$crton) # convert to date time
 
 ###Shopping orders
 
-setwd("C:/Users/azwal/Desktop/case study/data/SPM_Eurosparen_Part2")
-getwd()
+setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part2")
 
 shop.orders<- read.csv2("ShopOrders.csv", header = TRUE)
 
