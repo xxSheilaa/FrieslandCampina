@@ -1,9 +1,10 @@
 # Data summary 
 
-#rm(list = ls())
+rm(list = ls())
 
 library(anytime)
 library(recommenderlab)
+library(data.table)
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
 #setwd("C:/Users/sheil/Documents/data blok 3/SPM_Eurosparen_Part1")
@@ -15,43 +16,35 @@ setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
 
 ## Load and clean the account creation table ##
 
-acct.create <- read.csv2("AccountCreation.csv", header = TRUE)
+acct.create <- fread("AccountCreation.csv", header = TRUE, sep = ';')
 
 acct.create$modified <-
-  anytime(as.factor(acct.create$modified)) # change to date time from factor
-
-acct.create$created <-
-  anytime(as.factor(acct.create$created)) # change to date time from factor
+  anytime(as.character(acct.create$modified)) # change to date time from factor
 
 acct.create.sample <-
   acct.create[acct.create$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
 
-acct.create.sample$id <-
-  acct.create.sample$ï..id # cleaning up some variable names
+acct.create.sample$created <-
+  anytime(as.character(acct.create.sample$created)) # change to date time from factor
 
-acct.create.sample$ï..id <- NULL # remove the bad variable name
-
+rm(acct.create)
 #*****************************************************************#
 #************************ Account Balance ************************#
 #*****************************************************************#
 
-acct.bal <- read.csv2("AccountBalance.csv")
+acct.bal <- fread("AccountBalance.csv", header = TRUE, sep = ';')
 
-acct.bal$id <- acct.bal$ï..id # change name
-acct.bal$ï..id <- NULL # remove old names
 
-acct.bal$modified <- anytime(acct.bal$modified) # change from factor to datetime variable
-acct.bal$created <- anytime(acct.bal$created) # change from factor to datetime variable
+acct.bal$SavingsAccount <- acct.bal$id # change name
+acct.bal$id <- NULL # remove old names
 
-acct.bal.sample <- acct.bal[acct.bal$accountId %in% acct.create.sample$id,] # trim to the sampled data
+acct.bal$modified <- anytime(as.character(acct.bal$modified)) # change from factor to datetime variable
 
-acct.not <- acct.create.sample[!(acct.create.sample$id %in% acct.bal.sample$accountId),] # check the accounts that did not show up in the balance sample
+acct.bal.sample <- acct.bal[which(acct.bal$accountId %in% acct.create.sample$id),] # create sample
+  
+acct.bal.sample$created <- anytime(as.character(acct.bal.sample$created)) # change from factor to datetime variable
 
-# confirming that the ids which are not in account balance are not in code usage table. 
-# This means that if an account does not input a code then that account will not show up in the account balance table.
-
-code.2018[ code.2018$accountId  %in% acct.not$id,] # should be empty
-
+rm(acct.bal)
 #*****************************************************************#
 #************************ Account DemoGeo ************************#
 #*****************************************************************#
@@ -59,14 +52,16 @@ code.2018[ code.2018$accountId  %in% acct.not$id,] # should be empty
 ## Load and clean the account demogeo table ##
 
 acct.demogeo <-
-  read.csv2("AccountDemoGeo.csv") # read demographic data
+  fread("AccountDemoGeo.csv", header = T, sep = ';') # read demographic data
 
-acct.demogeo$dateOfBirth <-
-  anytime(as.factor(acct.demogeo$dateOfBirth)) # change to date time from factor
+acct.demogeo.sample <- acct.demogeo[which(acct.demogeo$accountID %in% acct.create.sample$id),] # create sample
+
+acct.demogeo.sample$dateOfBirth <-
+  anytime(as.character(acct.demogeo.sample$dateOfBirth)) # change to date time from factor
 
 acct.create.sample <-
   merge(acct.create.sample,
-        acct.demogeo,
+        acct.demogeo.sample,
         by.x = "id",
         by.y = "accountID") # combine demographics with account create data
 
@@ -74,6 +69,7 @@ post.gender <-
   table(PostalCode = acct.demogeo$postalCode, Sex = acct.demogeo$gender) # information of gender counts by postal code
 head(post.gender)
 
+rm(acct.demogeo)
 
 #***********************************************************#
 #************************ Cashbacks ************************#
@@ -81,22 +77,26 @@ head(post.gender)
 
 ## Load and clean the account balance table ##
 
-acct.cashback <- read.csv2("Cashbacks.csv", header = TRUE)
+acct.cashback <- fread("Cashbacks.csv", header = TRUE, sep = ';')
 
 acct.cashback$amount <- NULL # remove the bad variable name
-acct.cashback$ï..ROW_ID <- NULL # remove the bad variable name
+acct.cashback$ROW_ID <- NULL # remove the bad variable name
 acct.cashback$RUN_ID <- NULL # remove the bad variable name
 acct.cashback$IsActual <- NULL # remove the bad variable name
 
-acct.cashback$created <-
-  anytime(as.factor(acct.cashback$created)) # change to date time from factor
-acct.cashback$modified <-
-  anytime(as.factor(acct.cashback$modified)) # change to date time from factor
+acct.cashback.sample <- acct.cashback[which(acct.cashback$accountId %in% acct.create.sample$id),]
+
+acct.cashback.sample$created <-
+  anytime(as.character(acct.cashback.sample$created)) # change to date time from factor
+acct.cashback.sample$modified <-
+  anytime(as.character(acct.cashback.sample$modified)) # change to date time from factor
+
+rm(acct.cashback)
 
 acctid.origin <-
-  table(acct.cashback$accountId, acct.cashback$origin) # summarizes how each account id submitted the cashback via app or website
+  table(acct.cashback.sample$accountId, acct.cashback.sample$origin) # summarizes how each account id submitted the cashback via app or website
 sku.origin <-
-  table(acct.cashback$sku, acct.cashback$origin) # summarizes product registered under cashback as app or website count
+  table(acct.cashback.sample$sku, acct.cashback.sample$origin) # summarizes product registered under cashback as app or website count
 
 #************************************************************#
 #************************ CODE USAGE ************************#
@@ -104,14 +104,13 @@ sku.origin <-
 
 ## Load and clean Code usage for 2018YTD ##
 
-code.2018 <- read.csv2("CodeUsage_2018YTD.csv") # load in CodeUsage data
+code.2018 <- fread("CodeUsage_2018YTD.csv", header = T, sep = ';') # load in CodeUsage data
 
-code.2018$id <- code.2018$ï..id # remove the bad variable name by copying data into corrected variable name
 code.2018$accountid <- code.2018$person_id # rename the person_id to account_id
 code.2018$status_code <- NULL # status_code is only 0, no value there, so it was removed
 code.2018$person_id <- NULL # remove the person_id variable since it now is account_id
 
-code.2018$ï..id <- NULL # remove bad variable
+code.2018$id <- NULL # remove bad variable
 code.2018$ip_addr <- NULL # remove bad variable
 code.2018$seq_nr <- NULL # remove bad variable
 code.2018$is_reserved <- NULL # remove bad variable
@@ -121,9 +120,11 @@ code.2018$portal_id <- NULL # remove bad variable
 code.2018$RUN_ID <- NULL # remove bad variable
 code.2018$IsActual <- NULL # remove bad variable
 
-code.2018$crton <- anytime(code.2018$crton) # convert to date time
+code.2018.sample <- code.2018[which(code.2018$accountid %in% acct.create.sample$id),] # create the sample set
 
+code.2018.sample$crton <- anytime(code.2018.sample$crton) # convert to date time
 
+rm(code.2018)
 #************************************************************#
 #************************ Part 2 ****************************#
 #************************************************************#
@@ -137,119 +138,113 @@ code.2018$crton <- anytime(code.2018$crton) # convert to date time
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part2")
 
-shop.orders<- read.csv2("ShopOrders.csv", header = TRUE)
+shop.orders<- fread("ShopOrders.csv", header = TRUE, sep = ';')
 
-shop.orders$modified <-
-  anytime(as.factor(shop.orders$modified)) # change to date time from factor
+shop.orders.sample <- shop.orders[which(shop.orders$accountId %in% acct.create.sample$id),]
 
-shop.orders$created <-
-  anytime(as.factor(shop.orders$created)) # change to date time from factor
+shop.orders.sample$modified <-
+  anytime(as.character(shop.orders.sample$modified)) # change to date time from factor
 
-shop.orders.sample <-
-  shop.orders[shop.orders$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
+shop.orders.sample$created <-
+  anytime(as.character(shop.orders.sample$created)) # change to date time from factor
+
 
 shop.orders.sample$confirmEmail <- NULL #only null values
-
-shop.orders.sample$id <-
-  shop.orders.sample$X...id # cleaning up some variable names
-
-shop.orders.sample$X...id <- NULL # remove the bad variable name
-# shop.orders.sample$IsActual <- NULL # number of one 1762 number of two 62909
+shop.orders.sample$IsActual <- NULL # number of one 1762 number of two 62909
+shop.orders.sample$RUN_ID <- NULL # remove RUN_ID
 
 rm(shop.orders)
 
 ##Shop order products
-shop.order.product<- read.csv2("ShopOrderProducts.csv", header = TRUE)
+shop.order.product<- fread("ShopOrderProducts.csv", header = TRUE, sep = ';')
 
-shop.order.product$modified <-
-  anytime(as.factor(shop.order.product$modified)) # change to date time from factor
+shop.order.product.sample <- shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
 
-shop.order.product$created <-
-  anytime(as.factor(shop.order.product$created)) # change to date time from factor
+rm(shop.order.product) # remove the big table from environment
 
-shop.order.product.sample <-
-  shop.order.product[shop.order.product$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
+shop.order.product.sample$modified <-
+  anytime(as.character(shop.order.product.sample$modified)) # change to date time from factor
 
-shop.order.product.sample$id <-
-  shop.order.product.sample$X...id # cleaning up some variable names
+shop.order.product.sample$created <-
+  anytime(as.character(shop.order.product.sample$created)) # change to date time from factor
 
-shop.order.product.sample$X...id <- NULL # remove the bad variable name
-
+shop.order.product.sample$id <- NULL # remove the bad variable name
 shop.order.product.sample$batchId <- NULL  
 shop.order.product.sample$variantId <- NULL
 shop.order.product.sample$merchantId <- NULL
+shop.order.product.sample$RUN_ID <- NULL
+shop.order.product.sample$IsActual <- NULL
 
-rm(shop.order.product)
 
 ##Shop info products
-shop.product.info <- read.csv2("ShopProductInfo.csv", header = TRUE)
+shop.product.info <- fread("ShopProductInfo.csv", header = TRUE, sep = ';')
+
+shop.product.info$productId <- shop.product.info$id # change name to agreed upon naming convention
 
 shop.product.info$modified <-
-  anytime(as.factor(shop.product.info$modified)) # change to date time from factor
+  anytime(as.character(shop.product.info$modified)) # change to date time from factor
 
-shop.product.info$created <-
-  anytime(as.factor(shop.product.info$created)) # change to date time from factor
+shop.product.info$created <- NULL
 
-shop.product.info.sample <-
-  shop.product.info[shop.product.info$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
+shop.product.info$created <- 
+  shop.product.info$artcode
 
-shop.product.info.sample$id <-
-  shop.product.info.sample$X...id # cleaning up some variable names
-
-shop.product.info.sample$X...id <- NULL # remove the bad variable name
-
-
-shop.product.info.sample$shopIdList <- NULL  
-shop.product.info.sample$labelIdList <- NULL
-shop.product.info.sample$voucherTemplateUrlId <- NULL
-shop.product.info.sample$tempSoldOutDate <- NULL
-shop.product.info.sample$type <- NULL
-
-rm(shop.product.info)
+shop.product.info$id <- NULL
+shop.product.info$artcode <- NULL
+shop.product.info$shopIdList <- NULL  
+shop.product.info$labelIdList <- NULL
+shop.product.info$voucherTemplateUrlId <- NULL
+shop.product.info$tempSoldOutDate <- NULL
+shop.product.info$type <- NULL
+shop.product.info$RUN_ID <- NULL
+shop.product.info$IsActual <- NULL
 
 ##Shop brand info
-shop.brand.info <- read.csv2("ShopBrandInfo.csv", header = TRUE)
+shop.brand.info <- fread("ShopBrandInfo.csv", header = TRUE, sep = ';')
+
+shop.brand.info$brandId <- shop.brand.info$id # change name to agreed upon naming convention
 
 shop.brand.info$modified <-
-  anytime(as.factor(shop.brand.info$modified)) # change to date time from factor
+  anytime(as.character(shop.brand.info$modified)) # change to date time from factor
 
-shop.brand.info$created <-
-  anytime(as.factor(shop.brand.info$created)) # change to date time from factor
+shop.brand.info$online <- 
+  anytime(as.character(shop.brand.info$online)) # change to date time 
 
+shop.brand.info$offline <- 
+  anytime(as.character(shop.brand.info$offline)) # change to date time 
 
-###we would have only 10 observations lol
-# shop.brand.info.sample <-
-#   shop.brand.info[shop.brand.info$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
+shop.brand.info$id <- NULL 
+shop.brand.info$created <- NULL #variable is empty
+shop.brand.info$description <- NULL # variable was only NULL
+shop.brand.info$RUN_ID <- NULL # removing useless variables
+shop.brand.info$IsActual <- NULL # removing useless variable
 
-shop.brand.info$id <-
-  shop.brand.info$X...id # cleaning up some variable names
-
-shop.brand.info$X...id <- NULL # remove the bad variable name
-shop.brand.info$description <- NULL  
 
 ##ShopCategoryInfo
-shop.category.info <- read.csv2("ShopCategoryInfo.csv", header = TRUE)
+shop.category.info <- fread("ShopCategoryInfo.csv", header = TRUE, sep = ';')
+
+shop.category.info$categoryId <- shop.category.info$id # change name to agreed upon naming convention
 
 shop.category.info$modified <-
-  anytime(as.factor(shop.info.product$modified)) # change to date time from factor
+  anytime(as.character(shop.category.info$modified)) # change to date time from factor
 
-shop.category.info$created <-
-  anytime(as.factor(shop.info.product$created)) # change to date time from factor
+shop.category.info$online <-
+  anytime(as.character(shop.category.info$online)) # change to date time from factor
 
-shop.category.info.sample <-
-  shop.category.info[shop.category.info$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
+shop.category.info$offline <-
+  anytime(as.character(shop.category.info$offline)) # change to date time from factor
 
-shop.category.info.sample$id <-
-  shop.category.info.sample$X...id # cleaning up some variable names
-
-shop.category.info.sample$X...id <- NULL # remove the bad variable name
-
-shop.category.info.sample$description <- NULL  
-shop.category.info.sample$shopIdList <- NULL
-shop.category.info.sample$rank <- NULL #NAs
-shop.category.info.sample$enabled <- NULL #NAs
-shop.category.info.sample$RUN_ID <- NULL #NAs
-rm(shop.category.info)
+shop.category.info$id <- NULL
+shop.category.info$description <- NULL  
+shop.category.info$shopIdList <- NULL
+shop.category.info$rank <- NULL #NAs
+shop.category.info$enabled <- NULL #NAs
+shop.category.info$RUN_ID <- NULL #NAs
+shop.category.info$IsActual <- NULL
+shop.category.info$created <- NULL
+shop.category.info$image <- NULL
+shop.category.info$parentId <- NULL
+shop.category.info$headerImage <- NULL
 
 
 ########
@@ -258,63 +253,75 @@ rm(shop.category.info)
 
 ###PSAM
 #psam first
-psam.first<- read.csv2("PSAM_2018H2TD.csv", header = TRUE)
-psam.first$modified <- NULL #only null values
-psam.first$id <-
-  psam.first$X...id # cleaning up some variable names
-psam.first$X...id <- NULL # remove the bad variable name
+psam.first <- fread("PSAM_2018H1.csv", header = TRUE, sep = ';')
 
+psam.first.sample <- psam.first[which(psam.first$savingsAccountId %in% acct.bal.sample$SavingsAccount),]
+
+psam.first.sample$modified <- anytime(as.character(psam.first.sample$modified))
+psam.first.sample$created <- anytime(as.character(psam.first.sample$created))
+
+rm(psam.first)
 #psam second 
-psam.second<- read.csv2("PSAM_2018H2TD.csv", header = TRUE)
+psam.second<- fread("PSAM_2018H2TD.csv", header = TRUE, sep = ';')
 
-psam.second$modified <-
-  anytime(as.factor(psam.second$modified)) # change to date time from factor
+psam.second.sample <- psam.second[which(psam.second$savingsAccountId %in% acct.bal.sample$SavingsAccount),]
 
-psam.second$created <-
-  anytime(as.factor(psam.second$created)) # change to date time from factor
+psam.second.sample$modified <-
+  anytime(as.character(psam.second.sample$modified)) # change to date time from factor
 
-psam.second.sample <-
-  acct.balance[psam.second$modified > "2018-11-01", ] # limit the number of obs to only recently modified data
+psam.second.sample$created <-
+  anytime(as.character(psam.second.sample$created)) # change to date time from factor
 
-psam.second.sample$id <-
-  psam.second.sample$X....id # cleaning up some variable names
+rm(psam.second)
 
-psam.second.sample$X...id <- NULL # remove the bad variable name
+psam.2018.sample <- rbind(psam.first.sample,psam.second.sample) # combine 2018 into one table
 
-
+rm(psam.first.sample,psam.second.sample)
 ##########
 ###UPPC###
 ##########
 
 #uppc sku
-UPPC.sku<- read.csv2("UPPC_SKU.csv", header = TRUE)
-UPPC.sku$id <-
-  UPPC.sku$X....id # cleaning up some variable names
+UPPC.sku<- fread("UPPC_SKU.csv", header = TRUE, sep = ';')
 
-UPPC.sku$X...id <- NULL # remove the bad variable name
+UPPC.sku$sku_id <-
+  UPPC.sku$id # cleaning up some variable names
+
+UPPC.sku$id <- NULL # remove the bad variable name
+UPPC.sku$RUN_ID <- NULL
+UPPC.sku$IsActual <- NULL
+UPPC.sku$remark <- NULL # empty variable
 
 #uppc brands (only 19)
-UPPC.brands<- read.csv2("UPPC_Brands.csv", header = TRUE)
-UPPC.brands$id <-
-  UPPC.brands$X...id # cleaning up some variable names
+UPPC.brands<- fread("UPPC_Brands.csv", header = TRUE, sep = ';')
 
-UPPC.brands$X...id <- NULL # remove the bad variable name
-UPPC.brands$IsActual <- NULL 
+UPPC.brands$brand_id <-
+  UPPC.brands$id # changing name to the agreed upon naming convention
+
+UPPC.brands$id <- NULL
+UPPC.brands$IsActual <- NULL
+UPPC.brands$RUN_ID <- NULL
 
 #uppc prodgroups
-UPPC.prodgroups <- read.csv2("UPPC_ProdGroups.csv", header = TRUE)
-UPPC.prodgroups$id <-
-  UPPC.prodgroups$X...id # cleaning up some variable names
+UPPC.prodgroups <- fread("UPPC_ProdGroups.csv", header = TRUE, sep = ';')
 
-UPPC.prodgroups$X...id <- NULL # remove the bad variable name
+UPPC.prodgroups$prodgroup_id <-
+  UPPC.prodgroups$id # changing name to the agreed upon naming convention
+
+UPPC.prodgroups$id <- NULL # remove the bad variable name
+UPPC.prodgroups$IsActual <- NULL
+UPPC.prodgroups$RUN_ID <- NULL
+
 
 #uppc categories
-UPPC.categories <- read.csv2("UPPC_categories.csv")
+UPPC.categories <- fread("UPPC_categories.csv", header = TRUE, sep = ';')
 
-UPPC.categories$id <-
-  UPPC.categories$X...id # cleaning up some variable names
+UPPC.categories$category_id <- UPPC.categories$id# cleaning up some variable names
 
-UPPC.categories$X...id <- NULL # remove the bad variable name
+UPPC.categories$id <- NULL # remove the bad variable name
+UPPC.categories$RUN_ID <- NULL # remove the bad variable name
+UPPC.categories$IsActual <- NULL # remove the bad variable name
 
+### *** Recommender Lab begin *** ###
 
 
