@@ -2,19 +2,21 @@
 
 rm(list = ls())
 
-library(anytime)
+library(anytime) 
+
 library(recommenderlab)
+
 library(data.table)
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
+
 #setwd("C:/Users/sheil/Documents/data blok 3/SPM_Eurosparen_Part1")
 
+# Part 1
 
-#******************************************************************#
-#************************ Account Creation ************************#
-#******************************************************************#
+## Account Creation
 
-## Load and clean the account creation table ##
+### Load and clean the account creation table ###
 
 acct.create <- fread("AccountCreation.csv", header = TRUE, sep = ';')
 
@@ -28,9 +30,8 @@ acct.create.sample$created <-
   anytime(as.character(acct.create.sample$created)) # change to date time from factor
 
 rm(acct.create)
-#*****************************************************************#
-#************************ Account Balance ************************#
-#*****************************************************************#
+
+# Account Balance 
 
 acct.bal <- fread("AccountBalance.csv", header = TRUE, sep = ';')
 
@@ -45,9 +46,8 @@ acct.bal.sample <- acct.bal[which(acct.bal$accountId %in% acct.create.sample$id)
 acct.bal.sample$created <- anytime(as.character(acct.bal.sample$created)) # change from factor to datetime variable
 
 rm(acct.bal)
-#*****************************************************************#
-#************************ Account DemoGeo ************************#
-#*****************************************************************#
+
+# Account DemoGeo
 
 ## Load and clean the account demogeo table ##
 
@@ -71,9 +71,7 @@ head(post.gender)
 
 rm(acct.demogeo)
 
-#***********************************************************#
-#************************ Cashbacks ************************#
-#***********************************************************#
+# Cashbacks 
 
 ## Load and clean the account balance table ##
 
@@ -98,17 +96,21 @@ acctid.origin <-
 sku.origin <-
   table(acct.cashback.sample$sku, acct.cashback.sample$origin) # summarizes product registered under cashback as app or website count
 
-#************************************************************#
-#************************ CODE USAGE ************************#
-#************************************************************#
+# CODE USAGE
 
 ## Load and clean Code usage for 2018YTD ##
 
-code.2018 <- fread("CodeUsage_2018YTD.csv", header = T, sep = ';') # load in CodeUsage data
+code.2018 <-
+	fread("CodeUsage_2018YTD.csv", header = T, sep = ';') # load in CodeUsage data
 
-code.2018$accountid <- code.2018$person_id # rename the person_id to account_id
-code.2018$status_code <- NULL # status_code is only 0, no value there, so it was removed
-code.2018$person_id <- NULL # remove the person_id variable since it now is account_id
+code.2018$accountid <-
+	code.2018$person_id # rename the person_id to account_id
+
+code.2018$status_code <-
+	NULL # status_code is only 0, no value there, so it was removed
+
+code.2018$person_id <-
+	NULL # remove the person_id variable since it now is account_id
 
 code.2018$id <- NULL # remove bad variable
 code.2018$ip_addr <- NULL # remove bad variable
@@ -120,27 +122,24 @@ code.2018$portal_id <- NULL # remove bad variable
 code.2018$RUN_ID <- NULL # remove bad variable
 code.2018$IsActual <- NULL # remove bad variable
 
-code.2018.sample <- code.2018[which(code.2018$accountid %in% acct.create.sample$id),] # create the sample set
+code.2018.sample <-
+	code.2018[which(code.2018$accountid %in% acct.create.sample$id),] # create the sample set
 
-code.2018.sample$crton <- anytime(code.2018.sample$crton) # convert to date time
+code.2018.sample$crton <-
+	anytime(code.2018.sample$crton) # convert to date time
 
 rm(code.2018)
-#************************************************************#
-#************************ Part 2 ****************************#
-#************************************************************#
 
-
-#################
-##shoppingtable##
-#################
-
-###Shopping orders
+# Part 2 
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part2")
 
-shop.orders<- fread("ShopOrders.csv", header = TRUE, sep = ';')
+### Shop orders
 
-shop.orders.sample <- shop.orders[which(shop.orders$accountId %in% acct.create.sample$id),]
+shop.orders <- fread("ShopOrders.csv", header = TRUE, sep = ';')
+
+shop.orders.sample <-
+	shop.orders[which(shop.orders$accountId %in% acct.create.sample$id),]
 
 shop.orders.sample$modified <-
   anytime(as.character(shop.orders.sample$modified)) # change to date time from factor
@@ -155,10 +154,12 @@ shop.orders.sample$RUN_ID <- NULL # remove RUN_ID
 
 rm(shop.orders)
 
-##Shop order products
-shop.order.product<- fread("ShopOrderProducts.csv", header = TRUE, sep = ';')
+## Shop order products
 
-shop.order.product.sample <- shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
+shop.order.product <- fread("ShopOrderProducts.csv", header = TRUE, sep = ';')
+
+shop.order.product.sample <-
+	shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
 
 rm(shop.order.product) # remove the big table from environment
 
@@ -176,7 +177,7 @@ shop.order.product.sample$RUN_ID <- NULL
 shop.order.product.sample$IsActual <- NULL
 
 
-##Shop info products
+## Shop info products
 shop.product.info <- fread("ShopProductInfo.csv", header = TRUE, sep = ';')
 
 shop.product.info$productId <- shop.product.info$id # change name to agreed upon naming convention
@@ -199,7 +200,8 @@ shop.product.info$type <- NULL
 shop.product.info$RUN_ID <- NULL
 shop.product.info$IsActual <- NULL
 
-##Shop brand info
+## Shop brand info
+
 shop.brand.info <- fread("ShopBrandInfo.csv", header = TRUE, sep = ';')
 
 shop.brand.info$brandId <- shop.brand.info$id # change name to agreed upon naming convention
@@ -220,7 +222,8 @@ shop.brand.info$RUN_ID <- NULL # removing useless variables
 shop.brand.info$IsActual <- NULL # removing useless variable
 
 
-##ShopCategoryInfo
+## ShopCategoryInfo
+
 shop.category.info <- fread("ShopCategoryInfo.csv", header = TRUE, sep = ';')
 
 shop.category.info$categoryId <- shop.category.info$id # change name to agreed upon naming convention
@@ -247,12 +250,9 @@ shop.category.info$parentId <- NULL
 shop.category.info$headerImage <- NULL
 
 
-########
-##PSAM##
-########
+## PSAM ##
 
-###PSAM
-#psam first
+### PSAM First
 psam.first <- fread("PSAM_2018H1.csv", header = TRUE, sep = ';')
 
 psam.first.sample <- psam.first[which(psam.first$savingsAccountId %in% acct.bal.sample$SavingsAccount),]
@@ -261,7 +261,8 @@ psam.first.sample$modified <- anytime(as.character(psam.first.sample$modified))
 psam.first.sample$created <- anytime(as.character(psam.first.sample$created))
 
 rm(psam.first)
-#psam second 
+
+### psam second 
 psam.second<- fread("PSAM_2018H2TD.csv", header = TRUE, sep = ';')
 
 psam.second.sample <- psam.second[which(psam.second$savingsAccountId %in% acct.bal.sample$SavingsAccount),]
@@ -277,11 +278,11 @@ rm(psam.second)
 psam.2018.sample <- rbind(psam.first.sample,psam.second.sample) # combine 2018 into one table
 
 rm(psam.first.sample,psam.second.sample)
-##########
-###UPPC###
-##########
 
-#uppc sku
+### UPPC ###
+
+#### uppc sku
+
 UPPC.sku<- fread("UPPC_SKU.csv", header = TRUE, sep = ';')
 
 UPPC.sku$sku_id <-
@@ -292,7 +293,7 @@ UPPC.sku$RUN_ID <- NULL
 UPPC.sku$IsActual <- NULL
 UPPC.sku$remark <- NULL # empty variable
 
-#uppc brands (only 19)
+#### uppc brands (only 19)
 UPPC.brands<- fread("UPPC_Brands.csv", header = TRUE, sep = ';')
 
 UPPC.brands$brand_id <-
@@ -302,7 +303,7 @@ UPPC.brands$id <- NULL
 UPPC.brands$IsActual <- NULL
 UPPC.brands$RUN_ID <- NULL
 
-#uppc prodgroups
+#### uppc prodgroups
 UPPC.prodgroups <- fread("UPPC_ProdGroups.csv", header = TRUE, sep = ';')
 
 UPPC.prodgroups$prodgroup_id <-
@@ -313,7 +314,7 @@ UPPC.prodgroups$IsActual <- NULL
 UPPC.prodgroups$RUN_ID <- NULL
 
 
-#uppc categories
+#### uppc categories
 UPPC.categories <- fread("UPPC_categories.csv", header = TRUE, sep = ';')
 
 UPPC.categories$category_id <- UPPC.categories$id# cleaning up some variable names
@@ -323,5 +324,4 @@ UPPC.categories$RUN_ID <- NULL # remove the bad variable name
 UPPC.categories$IsActual <- NULL # remove the bad variable name
 
 ### *** Recommender Lab begin *** ###
-a
 
