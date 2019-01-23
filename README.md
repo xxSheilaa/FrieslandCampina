@@ -42,7 +42,7 @@ acct.bal$id <- NULL # remove old names
 acct.bal$modified <- anytime(as.character(acct.bal$modified)) # change from factor to datetime variable
 
 acct.bal.sample <- acct.bal[which(acct.bal$accountId %in% acct.create.sample$id),] # create sample
-  
+
 acct.bal.sample$created <- anytime(as.character(acct.bal.sample$created)) # change from factor to datetime variable
 
 rm(acct.bal)
@@ -101,16 +101,16 @@ sku.origin <-
 ## Load and clean Code usage for 2018YTD ##
 
 code.2018 <-
-	fread("CodeUsage_2018YTD.csv", header = T, sep = ';') # load in CodeUsage data
+  fread("CodeUsage_2018YTD.csv", header = T, sep = ';') # load in CodeUsage data
 
 code.2018$accountid <-
-	code.2018$person_id # rename the person_id to account_id
+  code.2018$person_id # rename the person_id to account_id
 
 code.2018$status_code <-
-	NULL # status_code is only 0, no value there, so it was removed
+  NULL # status_code is only 0, no value there, so it was removed
 
 code.2018$person_id <-
-	NULL # remove the person_id variable since it now is account_id
+  NULL # remove the person_id variable since it now is account_id
 
 code.2018$id <- NULL # remove bad variable
 code.2018$ip_addr <- NULL # remove bad variable
@@ -123,10 +123,10 @@ code.2018$RUN_ID <- NULL # remove bad variable
 code.2018$IsActual <- NULL # remove bad variable
 
 code.2018.sample <-
-	code.2018[which(code.2018$accountid %in% acct.create.sample$id),] # create the sample set
+  code.2018[which(code.2018$accountid %in% acct.create.sample$id),] # create the sample set
 
 code.2018.sample$crton <-
-	anytime(code.2018.sample$crton) # convert to date time
+  anytime(code.2018.sample$crton) # convert to date time
 
 rm(code.2018)
 
@@ -139,7 +139,9 @@ setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part2")
 shop.orders <- fread("ShopOrders.csv", header = TRUE, sep = ';')
 
 shop.orders.sample <-
-	shop.orders[which(shop.orders$accountId %in% acct.create.sample$id),]
+  shop.orders[which(shop.orders$accountId %in% acct.create.sample$id),]
+
+shop.orders.sample$orderId <- shop.orders.sample$id # change name
 
 shop.orders.sample$modified <-
   anytime(as.character(shop.orders.sample$modified)) # change to date time from factor
@@ -147,7 +149,7 @@ shop.orders.sample$modified <-
 shop.orders.sample$created <-
   anytime(as.character(shop.orders.sample$created)) # change to date time from factor
 
-
+shop.orders.sample$id <- NULL # remove changed name
 shop.orders.sample$confirmEmail <- NULL #only null values
 shop.orders.sample$IsActual <- NULL # number of one 1762 number of two 62909
 shop.orders.sample$RUN_ID <- NULL # remove RUN_ID
@@ -159,7 +161,7 @@ rm(shop.orders)
 shop.order.product <- fread("ShopOrderProducts.csv", header = TRUE, sep = ';')
 
 shop.order.product.sample <-
-	shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
+  shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
 
 rm(shop.order.product) # remove the big table from environment
 
@@ -324,4 +326,3 @@ UPPC.categories$RUN_ID <- NULL # remove the bad variable name
 UPPC.categories$IsActual <- NULL # remove the bad variable name
 
 ### *** Recommender Lab begin *** ###
-
