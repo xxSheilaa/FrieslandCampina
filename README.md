@@ -69,6 +69,11 @@ post.gender <-
   table(PostalCode = acct.demogeo$postalCode, Sex = acct.demogeo$gender) # information of gender counts by postal code
 head(post.gender)
 
+acct.create.sample <- merge(acct.create.sample,
+                            acct.bal.sample[,c("accountId","balance","SavingsAccount")],
+                            by.x = "id",
+                            by.y = "accountId")
+
 rm(acct.demogeo)
 
 # Cashbacks 
