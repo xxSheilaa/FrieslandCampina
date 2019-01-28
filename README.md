@@ -325,6 +325,23 @@ UPPC.categories$id <- NULL # remove the bad variable name
 UPPC.categories$RUN_ID <- NULL # remove the bad variable name
 UPPC.categories$IsActual <- NULL # remove the bad variable name
 
+### Product matrix
+#### number of orders per product
+dumdum <- aggregate(orderId ~ productId, data=shop.order.product, FUN=length)#1182s
+dumdum<-dumdum[order(dumdum$orderId, decreasing = T),]
+names(dumdum)[names(dumdum) == 'orderId'] <- 'Frequency'
+top10products<-dumdum[1:10,]
+##### creating product matrix
+product.categories<-read.csv2("shop.product.info2.csv") #dropbox file r
+prod.brand<-data.frame(shop.product.info$productId, shop.product.info$brandId)
+names(prod.brand)[names(prod.brand) == 'shop.product.info.brandId'] <- 'brandId'
+names(prod.brand)[names(prod.brand) == 'shop.product.info.productId'] <- 'productId'
+product.brand.cat<-merge(product.categories, prod.brand, by="productId")
+product.matrix<-merge(product.brand.cat, shop.brand.info, by="brandId")
+product.matrix<-product.matrix[,-c(74:79)]
+product.matrix<-merge(product.matrix, dumdum, by="productId")
+rm(prod.brand,product.categories,product.brand.cat)
+
 ### *** Recommender Lab begin *** ###
 
 #### user-item matrix created
