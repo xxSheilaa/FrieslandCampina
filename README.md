@@ -328,10 +328,6 @@ UPPC.categories$IsActual <- NULL # remove the bad variable name
 ### *** Recommender Lab begin *** ###
 
 #### user-item matrix created
-item.matrix <- matrix(0, nrow = nrow(acct.create.sample), ncol = nrow(shop.product.info))
-colnames(item.matrix) <- shop.product.info$productId
-rownames(item.matrix) <- acct.create.sample$id
-
 shop.sample <- shop.order.product.sample[,c("orderId","productId")]
 
 search.product.table <- merge(shop.orders.sample, shop.sample,by = "orderId")
@@ -339,15 +335,8 @@ search.product.table <- merge(shop.orders.sample, shop.sample,by = "orderId")
 ##### create frequency table for the number of purchases variable 
 purchase.freq <- table(User = search.product.table$accountId,Product = search.product.table$productId)
 
-##### remove all duplicates for the production of the item matrix
-search.product.table <- unique(search.product.table[,c("accountId","productId")])
-
-for (i in 1:ncol(item.matrix)) {
-  
-  prod.vector <- unique(search.product.table$accountId[which(search.product.table$productId == shop.product.info$productId[i])])
-  item.matrix[prod.vector,shop.product.info$productId[i]] <- 1
-  
-}
+##### create the item matrix
+item.matrix=(purchase.freq > 0)*1
 
 ##### set alpha, create choice variable for recommendation algorithm
 alpha = 40
