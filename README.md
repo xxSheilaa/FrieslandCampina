@@ -161,7 +161,7 @@ rm(shop.orders)
 shop.order.product <- fread("ShopOrderProducts.csv", header = TRUE, sep = ';')
 
 shop.order.product.sample <-
-  shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
+  shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$orderId),] # create the sample set
 
 rm(shop.order.product) # remove the big table from environment
 
