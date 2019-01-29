@@ -8,6 +8,10 @@ library(recommenderlab)
 
 library(data.table)
 
+library(ggplot2)
+
+library(
+
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
 
 #setwd("C:/Users/sheil/Documents/data blok 3/SPM_Eurosparen_Part1")
@@ -396,5 +400,13 @@ freq.campina1$accountid <- NULL
 ggplot(data=freq.campina1, aes(x= freq.campina1$name, y= freq.campina1$count)) + 
   geom_bar(stat = "identity") + 
   theme_classic()
+
+### summary statistics for average 
+avg.bal.demo <- aggregate(balance ~ gender, acct.create.sample,FUN = mean)
+avg.bal.post <- aggregate(balance ~ postalCode, acct.create.sample,FUN = mean)
+acct.create.sample$age <- round((Sys.time() - acct.create.sample$dateOfBirth)/365,0)
+avg.age.post <- aggregate(age ~ postalCode, acct.create.sample, FUN = mean)
+avg.age.post[,2] <- round(avg.age.post[,2],0)
+
 
 
