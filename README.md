@@ -10,7 +10,13 @@ library(data.table)
 
 library(ggplot2)
 
-library(
+library(homals)
+
+library(RColorBrewer)
+
+source("my_rescale.homals.R")
+
+source("my_plot.homals.R")
 
 setwd("C:/Users/kinse/Desktop/Block 3 MS/data/SPM_Eurosparen_Part1")
 
@@ -344,11 +350,12 @@ names(code.cat.freq.table)[names(code.cat.freq.table) == 'rn'] <- 'accountId'
 
 ### Product matrix
 #### number of orders per product
-dumdum <- aggregate(orderId ~ productId, data=shop.order.product, FUN=length)#1182s
+dumdum <- aggregate(orderId ~ productId, data=shop.order.product.sample, FUN=length)#1182s
 dumdum<-dumdum[order(dumdum$orderId, decreasing = T),]
 names(dumdum)[names(dumdum) == 'orderId'] <- 'Frequency'
 top10products<-dumdum[1:10,]
 ##### creating product matrix
+setwd("C:/Users/kinse/Dropbox/Blok 3/r")
 product.categories<-read.csv2("shop.product.info2.csv") #dropbox file r
 prod.brand<-data.frame(shop.product.info$productId, shop.product.info$brandId)
 names(prod.brand)[names(prod.brand) == 'shop.product.info.brandId'] <- 'brandId'
@@ -381,6 +388,7 @@ shop.sample
 
 ### top products FrieslandCampina
 
+
 ## categories of FrieslandCampina
 freq.campina <- aggregate(accountid ~ category_id,data = Campina.SKu, FUN= length)
 freq.campina <- merge(freq.campina,UPPC.categories, by = "category_id")
@@ -401,6 +409,7 @@ ggplot(data=freq.campina1, aes(x= freq.campina1$name, y= freq.campina1$count)) +
   geom_bar(stat = "identity") + 
   theme_classic()
 
+
 ### summary statistics for average 
 avg.bal.demo <- aggregate(balance ~ gender, acct.create.sample,FUN = mean)
 avg.bal.post <- aggregate(balance ~ postalCode, acct.create.sample,FUN = mean)
@@ -408,5 +417,49 @@ acct.create.sample$age <- round((Sys.time() - acct.create.sample$dateOfBirth)/36
 avg.age.post <- aggregate(age ~ postalCode, acct.create.sample, FUN = mean)
 avg.age.post[,2] <- round(avg.age.post[,2],0)
 
+### merging code.cat.freq.table with acct.create.sample
+acct.create.sample <- merge(acct.create.sample, code.cat.freq.table, by.x = "id", by.y = "accountId")
+acct.create.sample$age <- as.numeric(acct.create.sample$age)
+
+# MCA for dim reduction
+
+### data to be used for MCA
+data_MCA <- acct.create.sample[,-which(colnames(acct.create.sample) %in% c("STATE","dateOfBirth","SavingsAccount","id"))]
 
 
+res <- homals(data_MCA, ndim = 8, eps = 10^-8)
+### Rescale values in res
+res <- my_rescale.homals(res) 
+my_plot.homals(res, plot.type = "biplot", plot.dim = c(1,2), labels.scores = FALSE)  
+
+
+### plot the jointplot
+my_plot.homals(res, plot.type = "jointplot", plot.dim = c(1,2))   
+
+### Starplot
+plot(res, plot.type = "starplot", var.subset = "", asp = 1)
+
+### Starplot
+op <- par(mfrow = c(2,2))
+plot(res, plot.type = "starplot", var.subset = "", asp = 1, ask = FALSE)
+plot(res, plot.type = "starplot", var.subset = "", asp = 1, ask = FALSE)
+plot(res, plot.type = "starplot", var.subset = "", asp = 1, ask = FALSE)
+plot(res, plot.type = "starplot", var.subset = "", asp = 1, ask = FALSE)
+par(op)
+
+## Show discriminantion measures
+round(res$discrim, digits = 3)  
+
+## The eigenvalue is the mean columnwise discrimination measures 
+round(colMeans(res$discrim), digits = 3)
+round(res$eigenvalues, digits = 3)
+
+clust_choice <- tuneclus(data_MCA,nclusrange = 3:8,2,method = "MCAk", criterion = "ch",dst = "low")
+
+# MCA K-means for 5 clusters 
+outmca <- clusmca(data = data_MCA, nclus = 5, ndim=2,alphak = .5)
+outmca$cluster
+plot(outmca)
+plot(outmca, cludesc = TRUE, topstdres = 20)
+outmca$centroid
+outmca$size
