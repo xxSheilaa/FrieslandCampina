@@ -315,6 +315,16 @@ UPPC.prodgroups$id <- NULL # remove the bad variable name
 UPPC.prodgroups$IsActual <- NULL
 UPPC.prodgroups$RUN_ID <- NULL
 
+# merge all codes with products
+Campina.SKu <- merge(code.2018.sample,UPPC.sku,by = "sku_id")
+Campina.SKu <- Campina.SKu[,c("sku_id", "accountid","brand_id","prodgroup_id","category_id")]
+Campina.SKu <- merge(Campina.SKu,UPPC.categories, by = "category_id")
+
+#categories of codes used by users
+code.category.freq<-table(User = Campina.SKu$accountid, Category = Campina.SKu$name)
+code.cat.freq.table<-as.data.frame.matrix(code.category.freq)
+code.cat.freq.table <- setDT(code.cat.freq.table,keep.rownames = TRUE)
+names(code.cat.freq.table)[names(code.cat.freq.table) == 'rn'] <- 'accountId'
 
 #### uppc categories
 UPPC.categories <- fread("UPPC_categories.csv", header = TRUE, sep = ';')
