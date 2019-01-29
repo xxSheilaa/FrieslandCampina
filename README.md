@@ -320,15 +320,23 @@ UPPC.prodgroups$id <- NULL # remove the bad variable name
 UPPC.prodgroups$IsActual <- NULL
 UPPC.prodgroups$RUN_ID <- NULL
 
-
 #### uppc categories
 UPPC.categories <- fread("UPPC_categories.csv", header = TRUE, sep = ';')
-
 UPPC.categories$category_id <- UPPC.categories$id# cleaning up some variable names
-
 UPPC.categories$id <- NULL # remove the bad variable name
 UPPC.categories$RUN_ID <- NULL # remove the bad variable name
 UPPC.categories$IsActual <- NULL # remove the bad variable name
+
+# merge all codes with products
+Campina.SKu <- merge(code.2018.sample,UPPC.sku,by = "sku_id")
+Campina.SKu <- Campina.SKu[,c("sku_id", "accountid","brand_id","prodgroup_id","category_id")]
+Campina.SKu <- merge(Campina.SKu,UPPC.categories, by = "category_id")
+
+#categories of codes used by users
+code.category.freq<-table(User = Campina.SKu$accountid, Category = Campina.SKu$name)
+code.cat.freq.table<-as.data.frame.matrix(code.category.freq)
+code.cat.freq.table <- setDT(code.cat.freq.table,keep.rownames = TRUE)
+names(code.cat.freq.table)[names(code.cat.freq.table) == 'rn'] <- 'accountId'
 
 ### Product matrix
 #### number of orders per product
@@ -366,3 +374,27 @@ choice.user.item <- (1+alpha*purchase.freq)
 max(choice.user.item) # check the size of the largest choice weight
 search.product.table
 shop.sample
+
+### top products FrieslandCampina
+
+## categories of FrieslandCampina
+freq.campina <- aggregate(accountid ~ category_id,data = Campina.SKu, FUN= length)
+freq.campina <- merge(freq.campina,UPPC.categories, by = "category_id")
+freq.campina$count <- freq.campina$accountid
+freq.campina$accountid <- NULL
+
+ggplot(data=freq.campina, aes(x= freq.campina$name, y= freq.campina$count)) + 
+  geom_bar(stat = "identity") + 
+  theme_classic()
+
+## brands of FrieslandCampina
+freq.campina1 <- aggregate(accountid ~ brand_id,data = Campina.SKu, FUN= length)
+freq.campina1 <- merge(freq.campina1,UPPC.brands, by = "brand_id")
+freq.campina1$count <- freq.campina1$accountid
+freq.campina1$accountid <- NULL
+
+ggplot(data=freq.campina1, aes(x= freq.campina1$name, y= freq.campina1$count)) + 
+  geom_bar(stat = "identity") + 
+  theme_classic()
+
+
