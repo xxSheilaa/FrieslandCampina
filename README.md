@@ -325,4 +325,25 @@ UPPC.categories$id <- NULL # remove the bad variable name
 UPPC.categories$RUN_ID <- NULL # remove the bad variable name
 UPPC.categories$IsActual <- NULL # remove the bad variable name
 
-### *** Recommender Lab begin *** ###
+### top products FrieslandCampina
+
+## categories of FrieslandCampina
+freq.campina <- aggregate(accountid ~ category_id,data = Campina.SKu, FUN= length)
+freq.campina <- merge(freq.campina,UPPC.categories, by = "category_id")
+freq.campina$count <- freq.campina$accountid
+freq.campina$accountid <- NULL
+
+ggplot(data=freq.campina, aes(x= freq.campina$name, y= freq.campina$count)) + 
+  geom_bar(stat = "identity") + 
+  theme_classic()
+
+## brands of FrieslandCampina
+freq.campina1 <- aggregate(accountid ~ brand_id,data = Campina.SKu, FUN= length)
+freq.campina1 <- merge(freq.campina1,UPPC.brands, by = "brand_id")
+freq.campina1$count <- freq.campina1$accountid
+freq.campina1$accountid <- NULL
+
+ggplot(data=freq.campina1, aes(x= freq.campina1$name, y= freq.campina1$count)) + 
+  geom_bar(stat = "identity") + 
+  theme_classic()
+
