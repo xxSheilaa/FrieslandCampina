@@ -69,6 +69,11 @@ post.gender <-
   table(PostalCode = acct.demogeo$postalCode, Sex = acct.demogeo$gender) # information of gender counts by postal code
 head(post.gender)
 
+acct.create.sample <- merge(acct.create.sample,
+                            acct.bal.sample[,c("accountId","balance","SavingsAccount")],
+                            by.x = "id",
+                            by.y = "accountId")
+
 rm(acct.demogeo)
 
 # Cashbacks 
@@ -161,7 +166,7 @@ rm(shop.orders)
 shop.order.product <- fread("ShopOrderProducts.csv", header = TRUE, sep = ';')
 
 shop.order.product.sample <-
-  shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$id),] # create the sample set
+  shop.order.product[which(shop.order.product$orderId %in% shop.orders.sample$orderId),] # create the sample set
 
 rm(shop.order.product) # remove the big table from environment
 
@@ -315,6 +320,13 @@ UPPC.prodgroups$id <- NULL # remove the bad variable name
 UPPC.prodgroups$IsActual <- NULL
 UPPC.prodgroups$RUN_ID <- NULL
 
+#### uppc categories
+UPPC.categories <- fread("UPPC_categories.csv", header = TRUE, sep = ';')
+UPPC.categories$category_id <- UPPC.categories$id# cleaning up some variable names
+UPPC.categories$id <- NULL # remove the bad variable name
+UPPC.categories$RUN_ID <- NULL # remove the bad variable name
+UPPC.categories$IsActual <- NULL # remove the bad variable name
+
 # merge all codes with products
 Campina.SKu <- merge(code.2018.sample,UPPC.sku,by = "sku_id")
 Campina.SKu <- Campina.SKu[,c("sku_id", "accountid","brand_id","prodgroup_id","category_id")]
@@ -326,14 +338,42 @@ code.cat.freq.table<-as.data.frame.matrix(code.category.freq)
 code.cat.freq.table <- setDT(code.cat.freq.table,keep.rownames = TRUE)
 names(code.cat.freq.table)[names(code.cat.freq.table) == 'rn'] <- 'accountId'
 
-#### uppc categories
-UPPC.categories <- fread("UPPC_categories.csv", header = TRUE, sep = ';')
+### Product matrix
+#### number of orders per product
+dumdum <- aggregate(orderId ~ productId, data=shop.order.product, FUN=length)#1182s
+dumdum<-dumdum[order(dumdum$orderId, decreasing = T),]
+names(dumdum)[names(dumdum) == 'orderId'] <- 'Frequency'
+top10products<-dumdum[1:10,]
+##### creating product matrix
+product.categories<-read.csv2("shop.product.info2.csv") #dropbox file r
+prod.brand<-data.frame(shop.product.info$productId, shop.product.info$brandId)
+names(prod.brand)[names(prod.brand) == 'shop.product.info.brandId'] <- 'brandId'
+names(prod.brand)[names(prod.brand) == 'shop.product.info.productId'] <- 'productId'
+product.brand.cat<-merge(product.categories, prod.brand, by="productId")
+product.matrix<-merge(product.brand.cat, shop.brand.info, by="brandId")
+product.matrix<-product.matrix[,-c(74:79)]
+product.matrix<-merge(product.matrix, dumdum, by="productId")
+rm(prod.brand,product.categories,product.brand.cat)
 
-UPPC.categories$category_id <- UPPC.categories$id# cleaning up some variable names
+### *** Recommender Lab begin *** ###
 
-UPPC.categories$id <- NULL # remove the bad variable name
-UPPC.categories$RUN_ID <- NULL # remove the bad variable name
-UPPC.categories$IsActual <- NULL # remove the bad variable name
+#### user-item matrix created
+shop.sample <- shop.order.product.sample[,c("orderId","productId")]
+
+search.product.table <- merge(shop.orders.sample, shop.sample,by = "orderId")
+
+##### create frequency table for the number of purchases variable 
+purchase.freq <- table(User = search.product.table$accountId,Product = search.product.table$productId)
+
+##### create the item matrix
+item.matrix=(purchase.freq > 0)*1
+
+##### set alpha, create choice variable for recommendation algorithm
+alpha = 40
+choice.user.item <- (1+alpha*purchase.freq)
+max(choice.user.item) # check the size of the largest choice weight
+search.product.table
+shop.sample
 
 ### top products FrieslandCampina
 
@@ -356,4 +396,5 @@ freq.campina1$accountid <- NULL
 ggplot(data=freq.campina1, aes(x= freq.campina1$name, y= freq.campina1$count)) + 
   geom_bar(stat = "identity") + 
   theme_classic()
+
 
