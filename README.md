@@ -399,19 +399,19 @@ avg.age.post <- aggregate(age ~ postalCode, acct.create.sample, FUN = mean)
 avg.age.post[,2] <- round(avg.age.post[,2],0)
 
 ## Frequency User Brand table
-### Brand table
+#### Brand table
 intermediate.brand <- merge(shop.product.info,shop.brand.info, by = "brandId")
 freq.brand.eur <- merge(search.product.table,intermediate.brand, by = "productId")
 freq.brand.eur <- freq.brand.eur[,c("accountId", "brandId", "name.y")]
 
-### Brands bought by the users
+#### Brands bought by the users
 code.brand.freq<-table(User = freq.brand.eur$accountId, Brand = freq.brand.eur$name.y)
 code.brand.freq.table <- as.data.frame.matrix(code.brand.freq)
 code.brand.freq.table <- setDT(code.brand.freq.table,keep.rownames = TRUE)
 names(code.brand.freq.table)[names(code.brand.freq.table) == 'rn'] <- 'accountId'
 Brand.names.eur <- colnames(code.brand.freq.table[,-1])
 
-## Addictions to acc.create.sample
+## Additions to acc.create.sample
 
 ### merging code.brand.freq.table with acct.create.sample
 acct.create.sample <- merge(acct.create.sample,code.brand.freq.table, by.x = "id", by.y = "accountId")
@@ -430,9 +430,19 @@ acct.create.sample[,which(colnames(acct.create.sample) %in% c("Boter","Drinkzuiv
                breaks = c(-Inf, 6, 11, 16, 21, 51, Inf),
                labels = c("0-5 purchases", "6-10 purchases", "11-15 purchases", "16-20 purchases", "21-50 purchases", ">50 purchases"),
                right = FALSE)
-           }
-         )
+         }
+  )
 
+
+acct.create.sample[,which(colnames(acct.create.sample) %in% Brand.names.eur)] <-
+  lapply(acct.create.sample[,which(colnames(acct.create.sample) %in% Brand.names.eur)],
+         function(df) {
+           cut(as.numeric(df),
+               breaks = c(-Inf, 6, 11, 16, 21, 51, Inf),
+               labels = c("0-5 purchases", "6-10 purchases", "11-15 purchases", "16-20 purchases", "21-50 purchases", ">50 purchases"),
+               right = FALSE)
+         }
+  )
 
 # top products
 
@@ -470,12 +480,10 @@ ggplot(data=Top10Brands, aes(x= Top10Brands$Name.brand, y= Top10Brands$Top10Bran
 # MCA for dim reduction
 
 ### data to be used for MCA
-data_MCA <- acct.create.sample[,-c(1:4,5,9,10)]
-data_MCA.sample <- data_MCA[1:4000,]
+data_MCA <- acct.create.sample[,-which(colnames(acct.create.sample) %in% c("STATE","dateOfBirth","SavingsAccount","id"))]
 
 
-res <- homals(data_MCA.sample, ndim = 8, eps = 10^-8)
-#res <- homals(data_MCA, ndim = 8, eps = 10^-8)
+res <- homals(data_MCA, ndim = 8, eps = 10^-8)
 ### Rescale values in res
 res <- my_rescale.homals(res) 
 my_plot.homals(res, plot.type = "biplot", plot.dim = c(1,2), labels.scores = FALSE)  
