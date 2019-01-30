@@ -354,8 +354,11 @@ dumdum <- aggregate(orderId ~ productId, data=shop.order.product.sample, FUN=len
 dumdum<-dumdum[order(dumdum$orderId, decreasing = T),]
 names(dumdum)[names(dumdum) == 'orderId'] <- 'Frequency'
 top10products<-dumdum[1:10,]
-##### creating product matrix
+
+#### creating product matrix
 setwd("C:/Users/kinse/Dropbox/Blok 3/r")
+setwd("C:/Users/sheil/Dropbox/Erasmus Universiteit Premaster/Master/Blok 3/r")
+
 product.categories<-read.csv2("shop.product.info2.csv") #dropbox file r
 prod.brand<-data.frame(shop.product.info$productId, shop.product.info$brandId)
 names(prod.brand)[names(prod.brand) == 'shop.product.info.brandId'] <- 'brandId'
@@ -386,8 +389,38 @@ max(choice.user.item) # check the size of the largest choice weight
 search.product.table
 shop.sample
 
-### top products FrieslandCampina
+### summary statistics for average 
+avg.bal.demo <- aggregate(balance ~ gender, acct.create.sample,FUN = mean)
+avg.bal.post <- aggregate(balance ~ postalCode, acct.create.sample,FUN = mean)
+acct.create.sample$age <- round((Sys.time() - acct.create.sample$dateOfBirth)/365,0)
+avg.age.post <- aggregate(age ~ postalCode, acct.create.sample, FUN = mean)
+avg.age.post[,2] <- round(avg.age.post[,2],0)
 
+## Frequency User Brand table
+### Brand table
+intermediate.brand <- merge(shop.product.info,shop.brand.info, by = "brandId")
+freq.brand.eur <- merge(search.product.table,intermediate.brand, by = "productId")
+freq.brand.eur <- search.product.table[,c("orderId","accountId","productId")]
+freq.brand.eur <- merge(shop.order.product.sample,freq.category.eur, by = "productId")
+freq.brand.eur <- freq.brand.eur[,c("accountId", "brandId", "name.y")]
+
+### Brands bought by the users
+code.brand.freq<-table(User = freq.brand.eur$accountId, Brand = freq.brand.eur$name.y)
+code.brand.freq.table <- as.data.frame.matrix(code.brand.freq)
+code.brand.freq.table <- setDT(code.brand.freq.table,keep.rownames = TRUE)
+names(code.brand.freq.table)[names(code.brand.freq.table) == 'rn'] <- 'accountId'
+
+## Addictions to acc.create.sample
+
+### merging code.brand.freq.table with acct.create.sample
+acct.create.sample <- merge(acct.create.sample,code.brand.freq.table, by.x = "id", by.y = "accountId")
+
+### merging code.cat.freq.table with acct.create.sample
+acct.create.sample <- merge(acct.create.sample, code.cat.freq.table, by.x = "id", by.y = "accountId")
+acct.create.sample$age <- as.numeric(acct.create.sample$age)
+
+
+# top products
 
 ## categories of FrieslandCampina
 freq.campina <- aggregate(accountid ~ category_id,data = Campina.SKu, FUN= length)
@@ -409,17 +442,16 @@ ggplot(data=freq.campina1, aes(x= freq.campina1$name, y= freq.campina1$count)) +
   geom_bar(stat = "identity") + 
   theme_classic()
 
+## brands of Eurosparen 
+Top10Brands <- colSums(code.brand.freq.table[,-1])
+Top10Brands <- head(sort(Top10Brands, decreasing = T),10)
+Name.brand <- names(Top10Brands)
+Top10Brands <- data.table(cbind(Name.brand,Top10Brands))
 
-### summary statistics for average 
-avg.bal.demo <- aggregate(balance ~ gender, acct.create.sample,FUN = mean)
-avg.bal.post <- aggregate(balance ~ postalCode, acct.create.sample,FUN = mean)
-acct.create.sample$age <- round((Sys.time() - acct.create.sample$dateOfBirth)/365,0)
-avg.age.post <- aggregate(age ~ postalCode, acct.create.sample, FUN = mean)
-avg.age.post[,2] <- round(avg.age.post[,2],0)
 
-### merging code.cat.freq.table with acct.create.sample
-acct.create.sample <- merge(acct.create.sample, code.cat.freq.table, by.x = "id", by.y = "accountId")
-acct.create.sample$age <- as.numeric(acct.create.sample$age)
+ggplot(data=Top10Brands, aes(x= Top10Brands$Name.brand, y= Top10Brands$Top10Brands)) + 
+  geom_bar(stat = "identity") + 
+  theme_classic()
 
 # MCA for dim reduction
 
