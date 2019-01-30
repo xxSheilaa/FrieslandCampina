@@ -470,10 +470,12 @@ ggplot(data=Top10Brands, aes(x= Top10Brands$Name.brand, y= Top10Brands$Top10Bran
 # MCA for dim reduction
 
 ### data to be used for MCA
-data_MCA <- acct.create.sample[,-which(colnames(acct.create.sample) %in% c("STATE","dateOfBirth","SavingsAccount","id"))]
+data_MCA <- acct.create.sample[,-c(1:4,5,9,10)]
+data_MCA.sample <- data_MCA[1:4000,]
 
 
-res <- homals(data_MCA, ndim = 8, eps = 10^-8)
+res <- homals(data_MCA.sample, ndim = 8, eps = 10^-8)
+#res <- homals(data_MCA, ndim = 8, eps = 10^-8)
 ### Rescale values in res
 res <- my_rescale.homals(res) 
 my_plot.homals(res, plot.type = "biplot", plot.dim = c(1,2), labels.scores = FALSE)  
