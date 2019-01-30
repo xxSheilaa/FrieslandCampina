@@ -14,6 +14,8 @@ library(homals)
 
 library(RColorBrewer)
 
+library(lubridate)
+
 source("my_rescale.homals.R")
 
 source("my_plot.homals.R")
@@ -418,6 +420,19 @@ acct.create.sample <- merge(acct.create.sample,code.brand.freq.table, by.x = "id
 ### merging code.cat.freq.table with acct.create.sample
 acct.create.sample <- merge(acct.create.sample, code.cat.freq.table, by.x = "id", by.y = "accountId")
 acct.create.sample$age <- as.numeric(acct.create.sample$age)
+acct.create.sample$acct.age <- interval(as.Date(acct.create.sample$created, format = "%m/%d/%Y"),Sys.Date()) %/% months(1) # age of acct in months
+acct.create.sample$last.update <-  interval(as.Date(acct.create.sample$modified, format = "%m/%d/%Y"),Sys.Date()) %/% months(1) # last change to the acct
+
+# create class variables from the frequency purchase data
+acct.create.sample[,which(colnames(acct.create.sample) %in% c("Boter","Drinkzuivel","Eetzuivel","Kaas","Koffieverrijkers","Overige / Onbekend","Sappen","Sports Nutrition","Spuit & slagroom","Vleesvervangers"))] <-
+  lapply(acct.create.sample[,which(colnames(acct.create.sample) %in% c("Boter","Drinkzuivel","Eetzuivel","Kaas","Koffieverrijkers","Overige / Onbekend","Sappen","Sports Nutrition","Spuit & slagroom","Vleesvervangers"))],
+         function(df) {
+           cut(as.numeric(df),
+               breaks = c(-Inf, 6, 11, 16, 21, 51, Inf),
+               labels = c("0-5 purchases", "6-10 purchases", "11-15 purchases", "16-20 purchases", "21-50 purchases", ">50 purchases"),
+               right = FALSE)
+           }
+         )
 
 
 # top products
